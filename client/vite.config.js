@@ -17,7 +17,8 @@ export default defineConfig({
       imports: [
         'vue',
         'vue-router'
-      ]
+      ],
+      dts: true
     }),
   ],
 })
