@@ -3,3 +3,9 @@ html, body {
     padding: 0;
     background-color: #F2F2F2;
 }
+
+.text-overflow {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

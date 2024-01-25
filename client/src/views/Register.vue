@@ -1,22 +1,20 @@
 <template>
   <div class="flex-container">
     <div class="wrap">
-      <div
-        class="avatar"
-        :style="{
-          backgroundColor: avatarBgColor
-        }"
-        @click="changeAvatarBgColor"
-      >
-        {{ userFirstName }}
-      </div>
+      <user-avatar
+        style="width: 80px; height: 80px; margin: -40px auto 0 auto;"
+        v-model:bg-color="userInfo.avatarBgColor"
+        :user-name="userInfo.userName"
+        has-change-bg-color
+      />
       <div class="form">
         <input
-          v-model="userName"
+          v-model="userInfo.userName"
           placeholder="请输入用户名"
+          maxlength="10"
         >
         <button
-          :disabled="userFirstName === '?'"
+          :disabled="userInfo.userName.length === 0"
           @click="handleEnterGame"
         >
           进入游戏
@@ -33,6 +31,7 @@
 
 <script setup>
 import { setUserInfo } from "@/store/localforage.js";
+import UserAvatar from "@/components/UserAvatar.vue";
 
 defineOptions({
   name: 'Register',
@@ -45,28 +44,22 @@ const genRandomColor = () => {
   return `rgb(${r}, ${g}, ${b})`
 }
 
-const userName = ref('')
-
-const avatarBgColor = ref(genRandomColor());
-const changeAvatarBgColor = () => {
-  avatarBgColor.value = genRandomColor();
-}
-
-const userFirstName = computed(() => {
-  return userName.value[0]?.toUpperCase() || '?'
+const userInfo = ref({
+  userName: '',
+  avatarBgColor: genRandomColor(),
 });
+
 
 const router = useRouter();
 const handleEnterGame = () => {
-  if (userFirstName.value === '?') {
+  if (userInfo.value.userName.length === 0) {
     return
   }
 
-  const userInfo = {
-    userName: userName.value,
-    avatarBgColor: avatarBgColor.value
-  }
-  setUserInfo(userInfo).then(() => {
+  setUserInfo({
+    ...userInfo.value,
+    userFirstName: userInfo.value.userName[0],
+  }).then(() => {
     router.push('/home')
   })
 
@@ -93,19 +86,6 @@ const handleEnterGame = () => {
   margin-top: 100px;
   border-radius: 20px 20px 0 0;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
-.avatar {
-  width: 80px;
-  height: 80px;
-  background: #000;
-  margin: -40px auto 0;
-  border-radius: 50%;
-  line-height: 80px;
-  text-align: center;
-  font-size: 30px;
-  color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .form {
