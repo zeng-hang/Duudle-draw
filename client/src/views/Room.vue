@@ -37,7 +37,8 @@
       <div style="text-align: center; padding: 10px;">
         <bubble-button
           style="font-size: 1em; width: 80%; min-width: 220px; box-sizing: border-box; padding: 10px 0;"
-          :disabled="userInfo.seatIndex !== 0 || preparativeNum < 2"
+          :disabled="userInfo.seatIndex !== 0"
+          @click="handleStartGame"
         >
           {{
             userInfo.seatIndex !== 0
@@ -131,7 +132,6 @@ if (!route.query.userName) {
 
 const contestant = ref([]);
 
-
 const preparative = ref(new Array(6).fill(0).map((item, index) => {
   return {
     seatIndex: index,
@@ -181,7 +181,6 @@ const handleBack = () => {
   router.back();
 }
 
-
 const messageList = ref([]);
 const message = ref('');
 const chatArea = ref(null);
@@ -203,6 +202,12 @@ const handleSendMessage = () => {
       top: chatArea.value.scrollHeight,
       behavior: 'smooth',
     })
+  })
+}
+
+const handleStartGame = () => {
+  router.push({
+    path: '/game'
   })
 }
 </script>
