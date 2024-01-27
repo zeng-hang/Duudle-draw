@@ -222,7 +222,7 @@ const handleStartGame = () => {
 }
 
 .preparative-seats {
-  width: 80%;
+  width: calc(100% - 40px);
   max-width: 540px;
   background: #fff;
   border: 1px solid #eee;
@@ -233,7 +233,8 @@ const handleStartGame = () => {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 10px;
+  column-gap: 24px;
+  row-gap: 10px;
   margin-top: 10px;
 }
 

@@ -68,6 +68,7 @@ const gotoRoom = () => {
   position: relative;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   max-height: 300px;
   overflow: auto;
   background-color: #fff;

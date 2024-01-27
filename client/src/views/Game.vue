@@ -1,5 +1,6 @@
 <template>
   <div class="flex-container">
+
     <div class="draw-container">
       <div class="topic">
         两个字，是一种动物，四只脚
@@ -30,59 +31,15 @@
       >
         <div class="painting-brush-container">
           <div
+            v-for="(brush, index) in paintingBrushes"
             :class="{
               'painting-brush': true,
-              active: currentBrush === 1
+              active: currentBrush === index
             }"
-            @click="handleChooseBrush(1)"
+            @click="handleChooseBrush(index)"
           >
-            <img alt="1号画笔" src="@/assets/icon/xiantiao.svg">
-            <span>1号画笔</span>
-          </div>
-          <div
-            :class="{
-              'painting-brush': true,
-              active: currentBrush === 2
-            }"
-            @click="handleChooseBrush(2)"
-          >
-            <img alt="2号画笔" src="@/assets/icon/huabidaxiao.svg">
-            <span>2号画笔</span>
-          </div>
-          <div
-            :class="{
-              'painting-brush': true,
-              active: currentBrush === 3
-            }"
-            @click="handleChooseBrush(3)"
-          >
-            <img alt="3号画笔" src="@/assets/icon/huabidaxiao_1.svg">
-            <span>3号画笔</span>
-
-          </div>
-          <div
-            :class="{
-              'painting-brush': true,
-              active: currentBrush === 4
-            }"
-            @click="handleChooseBrush(4)"
-          >
-            <img alt="4号画笔" src="@/assets/icon/huabidaxiao_2.svg">
-            <span>4号画笔</span>
-          </div>
-          <div
-            :class="{
-              'painting-brush': true,
-              active: currentBrush === 5
-            }"
-            @click="handleChooseBrush(5)"
-          >
-            <img alt="背景颜色" src="@/assets/icon/beijingyanse.svg">
-            <span>背景颜色</span>
-          </div>
-          <div class="painting-brush" @click="handleChooseBrush(6)">
-            <img alt="清空" src="@/assets/icon/qingkong.svg">
-            <span>清空</span>
+            <img :alt="brush.name" :src="brush.icon">
+            <span>{{ brush.name }}</span>
           </div>
         </div>
 
@@ -91,9 +48,9 @@
             v-for="color in colorFul"
             :key="color"
             :class="{
-            color: true,
-            active: color === currentColor
-          }"
+                color: true,
+                active: color === currentColor
+              }"
             :style="{backgroundColor: color}"
             @click="handleChooseColor(color)"
           ></div>
@@ -193,17 +150,25 @@
 import { fabric } from "fabric";
 import UserAvatar from "@/components/UserAvatar.vue";
 import { getUserInfo } from "@/store/localforage.js";
+import huabi_1 from '@/assets/icon/huabi_1.svg';
+import huabi_2 from '@/assets/icon/huabi_2.svg';
+import huabi_3 from '@/assets/icon/huabi_3.svg';
+import huabi_4 from '@/assets/icon/huabi_4.svg';
+import beijingyanse from '@/assets/icon/beijingyanse.svg';
+import chexiao from '@/assets/icon/chexiao.svg';
+import qingkong from '@/assets/icon/qingkong.svg';
 
 defineOptions({
   name: 'Game',
 });
 
-
+const drawStack = [];
 let canvas = null;
 onMounted(() => {
+
   canvas = new fabric.Canvas('drawBoard', {
-    width: 320,
-    height: 320,
+    width: 360,
+    height: 360,
     isDrawingMode: true
   });
 
@@ -213,9 +178,12 @@ onMounted(() => {
   //   isDrawingMode: true
   // });
 
+  canvas.freeDrawingBrush.width = brushWidths[currentBrush.value];
+  canvas.freeDrawingBrush.color = currentColor.value;
 
-  canvas.freeDrawingBrush.width = 5;
-  canvas.freeDrawingBrush.color = '#000000';
+  canvas.on('path:created', function (e) {
+    drawStack.push(e.path);
+  });
 
 
   // const pencil = new fabric.PencilBrush(targetCanvas);
@@ -259,7 +227,12 @@ const colorFul = [
   '#A52A2A'
 ];
 const handleChooseColor = (color) => {
-  if (currentBrush.value === 5) {
+  if (currentBrush.value === 4) {
+    drawStack.push({
+      color,
+      previousColor: canvas.backgroundColor,
+      type: 'background',
+    });
     canvas.backgroundColor = color;
     canvas.renderAll();
     return;
@@ -269,7 +242,16 @@ const handleChooseColor = (color) => {
   canvas.freeDrawingBrush.color = color;
 };
 
-const currentBrush = ref(2);
+const paintingBrushes = [
+  { name: '1号画笔', icon: huabi_1 }, // 0
+  { name: '2号画笔', icon: huabi_2 }, // 1
+  { name: '3号画笔', icon: huabi_3 }, // 2
+  { name: '4号画笔', icon: huabi_4 }, // 3
+  { name: '背景颜色', icon: beijingyanse }, // 4
+  { name: '撤销', icon: chexiao }, // 5
+  { name: '清空', icon: qingkong }, // 6
+];
+const currentBrush = ref(1);
 const brushWidths = [2, 5, 10, 20];
 const handleChooseBrush = (brush) => {
   if (brush === 6) {
@@ -277,12 +259,27 @@ const handleChooseBrush = (brush) => {
     return;
   }
 
-  currentBrush.value = brush;
   if (brush === 5) {
+    const lastPath = drawStack.pop();
+    if (!lastPath) {
+      return;
+    }
+
+    if (lastPath.type === 'background') {
+      canvas.backgroundColor = lastPath.previousColor;
+      canvas.renderAll();
+      return;
+    }
+    canvas.remove(lastPath);
     return;
   }
 
-  canvas.freeDrawingBrush.width = brushWidths[brush - 1];
+  currentBrush.value = brush;
+  if (brush === 4) {
+    return;
+  }
+
+  canvas.freeDrawingBrush.width = brushWidths[brush];
 };
 
 const self = ref({});
@@ -298,7 +295,7 @@ const preparative = ref([
   { userName: '小李', avatarBgColor: '#FFA500' },
   { userName: '小王', avatarBgColor: '#FFFF00' },
 ]);
-const currentAuditor = ref('小红');
+const currentAuditor = ref('我叫哈哈哈');
 
 const MESSAGE_TYPES = {
   TEXT: 1,
@@ -374,6 +371,8 @@ setInterval(() => {
 
 <style scoped>
 .flex-container {
+  --layout-width: 360px;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -383,7 +382,7 @@ setInterval(() => {
 
 .draw-container {
   flex: 0 0 auto;
-  width: 320px;
+  width: var(--layout-width);
   background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -401,8 +400,8 @@ setInterval(() => {
 }
 
 #drawBoard {
-  width: 320px;
-  height: 320px;
+  width: var(--layout-width);
+  height: var(--layout-width);
 }
 
 .painting-brush-container {
@@ -446,17 +445,17 @@ setInterval(() => {
 }
 
 .colorful {
+  flex: 1 1 auto;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
   padding: 10px 0;
-  border-top: 1px solid #ccc;
 }
 
 .colorful .color {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border: 1px solid #ccc;
   border-radius: 50%;
   cursor: pointer;
@@ -505,7 +504,7 @@ setInterval(() => {
 
 .preparative {
   background: #fff;
-  width: 320px;
+  width: var(--layout-width);
   border-radius: 4px;
   border: 1px solid #ccc;
   display: flex;
@@ -629,7 +628,7 @@ setInterval(() => {
 }
 
 .opus {
-  width: 320px;
+  width: var(--layout-width);
   display: flex;
   align-items: center;
   flex-direction: column;
