@@ -30,6 +30,7 @@
 </template>
 
 <script setup>
+import { addUser } from "@/api/index.js";
 import { setUserInfo } from "@/store/localforage.js";
 import UserAvatar from "@/components/UserAvatar.vue";
 
@@ -51,18 +52,20 @@ const userInfo = ref({
 
 
 const router = useRouter();
-const handleEnterGame = () => {
+const handleEnterGame = async () => {
   if (userInfo.value.userName.length === 0) {
     return
   }
 
-  setUserInfo({
-    ...userInfo.value,
-    userFirstName: userInfo.value.userName[0],
-  }).then(() => {
-    router.push('/home')
-  })
+  const data = {
+    userName: userInfo.value.userName,
+    avatarBgColor: userInfo.value.avatarBgColor,
+  }
 
+  const { data: user } = await addUser(data);
+  await setUserInfo(user);
+
+  await router.push('/home');
 }
 
 
