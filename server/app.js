@@ -16,3 +16,7 @@ const httpServer = createSocketIo(app);
 httpServer.listen(3000, () => {
   console.log('服务已启动：http://localhost:3000')
 });
+
+process.on('uncaughtException', (err) => {
+  console.error(err.message, err.stack);
+});

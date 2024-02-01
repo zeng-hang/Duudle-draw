@@ -47,8 +47,27 @@ export default function ({socket, user, rooms, io}) {
 
   socket.on('reSeat', (seatIndex) => {
     const room = rooms[user.room];
+    const seatIndexArr = Object.values(room.users).map(user => user.seatIndex);
+    if (seatIndex != null && seatIndexArr.includes(seatIndex)) {
+      socket.emit('error', '此座位已被占用');
+      return;
+    }
+
     const userInfo = room.users[socket.id];
     userInfo.seatIndex = seatIndex;
     io.to(user.room).emit('reSeat', userInfo);
+  });
+
+  socket.on('leaveRoom', () => {
+    socket.leave(user.room);
+    // io.to(user.room).emit('leaveRoom', user.userName);
+  });
+
+  socket.on('message', (message) => {
+    io.to(user.room).emit('message', {
+      userName: user.userName,
+      avatarBgColor: user.avatarBgColor,
+      content: message
+    });
   });
 }

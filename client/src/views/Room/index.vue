@@ -17,7 +17,8 @@
             v-if="!item.userInfo"
             class="placeholder"
             @click="handleJoinGame(item.seatIndex)"
-          >空缺
+          >
+            空缺
           </div>
 
           <div
@@ -37,7 +38,7 @@
       <div style="text-align: center; padding: 10px;">
         <bubble-button
           style="font-size: 1em; width: 80%; min-width: 220px; box-sizing: border-box; padding: 10px 0;"
-          :disabled="userInfo.seatIndex !== 0"
+          :disabled="userInfo.seatIndex !== 0 || preparativeNum < 2"
           @click="handleStartGame"
         >
           {{
@@ -49,26 +50,7 @@
       </div>
     </div>
 
-    <div ref="chatArea" class="chat-area">
-      <div
-        v-for="(item, index) in messageList"
-        :key="index"
-        :class="{
-          'chat-item': true,
-          'is-self': item.userName === userInfo.userName,
-        }"
-      >
-        <user-avatar
-          style="width: 38px; height: 38px; margin-top: 4px;"
-          :bg-color="item.avatarBgColor"
-          :user-name="item.userName"
-        />
-        <div class="chat-content">
-          <span class="user-name">{{ item.userName }}</span>
-          <span class="content">{{ item.content}}</span>
-        </div>
-      </div>
-    </div>
+    <chat-area :user-info="userInfo"/>
 
     <div class="auditorium">
       <h3 style="margin: 0; padding: 10px;">观众席</h3>
@@ -76,7 +58,8 @@
       <div
         v-if="auditor.length === 0"
         style="text-align: center; padding: 10px;"
-      >暂无观众
+      >
+        暂无观众
       </div>
 
       <div v-else style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
@@ -92,41 +75,47 @@
         </div>
       </div>
     </div>
-
-    <div class="operate-area">
-      <button @click="handleBack">返回</button>
-      <input
-        v-model="message"
-        placeholder="这里可以聊天"
-        maxlength="20"
-        @keyup.enter="handleSendMessage"
-      >
-    </div>
   </div>
 </template>
 
 <script setup>
-import { getUserInfo } from "@/store/localforage.js";
+import {getUserInfo} from "@/store/localforage.js";
 import HeadBar from "@/components/HeadBar.vue";
 import UserAvatar from "@/components/UserAvatar.vue";
 import BubbleButton from "@/components/BubbleButton.vue";
-import socket, {useSocketOn, emitSocket} from "@/utils/socketIo.js";
+import ChatArea from "./ChatArea.vue";
+import socket, {emitSocket, useSocketOn} from "@/utils/socketIo.js";
 
 defineOptions({
   name: 'Room',
 })
 
+socket.once('roomUsers', (users) => {
+  contestant.value.push(...users);
+  preparative.value.forEach((item) => {
+    item.userInfo = contestant.value.find((user) => user.seatIndex === item.seatIndex);
+  })
+});
+
 useSocketOn('joinRoom', (userInfo) => {
+  if (contestant.value.some((item) => item.userName === userInfo.userName)) {
+    return;
+  }
   contestant.value.push(userInfo);
 });
 
 useSocketOn('leaveRoom', (userName) => {
   const index = contestant.value.findIndex((item) => item.userName === userName);
-  contestant.value.splice(index, 1);
-});
+  if (index === -1) {
+    return;
+  }
 
-socket.once('roomUsers', (users) => {
-  contestant.value.push(...users);
+  contestant.value.splice(index, 1);
+  preparative.value.forEach((item) => {
+    if (item.userInfo?.userName === userName) {
+      item.userInfo = null;
+    }
+  })
 });
 
 useSocketOn('reSeat', (userInfo) => {
@@ -201,39 +190,15 @@ const auditor = computed(() => {
 })
 
 const router = useRouter();
-const handleBack = () => {
-  router.back();
-}
-
-const messageList = ref([]);
-const message = ref('');
-const chatArea = ref(null);
-const handleSendMessage = () => {
-  if (message.value.length === 0) {
-    return;
-  }
-
-
-  messageList.value.push({
-    userName: userInfo.value.userName,
-    avatarBgColor: userInfo.value.avatarBgColor,
-    content: message.value,
-  });
-  message.value = '';
-
-  nextTick(() => {
-    chatArea.value.scroll({
-      top: chatArea.value.scrollHeight,
-      behavior: 'smooth',
-    })
-  })
-}
-
 const handleStartGame = () => {
   router.push({
     path: '/game'
   })
 }
+
+onUnmounted(() => {
+  emitSocket('leaveRoom');
+})
 </script>
 
 <style scoped>
@@ -284,7 +249,7 @@ const handleStartGame = () => {
 
 @media (hover: hover) {
   .seat-item .placeholder:hover {
-    background: #f0f0f0;
+    background: #ccc;
   }
 }
 
@@ -309,52 +274,6 @@ const handleStartGame = () => {
   color: #999;
 }
 
-.chat-area {
-  height: 200px;
-  overflow: auto;
-  background: #fff;
-  width: 100%;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.chat-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px;
-  box-sizing: border-box;
-}
-
-.chat-item .chat-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-}
-
-.chat-item.is-self {
-  flex-direction: row-reverse;
-}
-
-.chat-item.is-self .chat-content {
-  align-items: flex-end;
-}
-
-.chat-content .user-name {
-  font-size: 12px;
-  color: #999;
-}
-
-.chat-content .content {
-  position: relative;
-  font-size: 14px;
-  color: #000;
-  border-radius: 8px;
-  padding: 10px;
-  background: #f0f0f0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
 .auditorium {
   width: 100%;
   position: relative;
@@ -362,46 +281,8 @@ const handleStartGame = () => {
   background-color: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
+  padding-bottom: 10px;
   margin-bottom: 80px;
 }
 
-.operate-area {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  height: 80px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  background: #F2F2F2;
-}
-
-.operate-area button {
-  all: unset;
-  flex: 0 0 54px;
-  min-width: 54px;
-  text-align: center;
-  line-height: 48px;
-  cursor: pointer;
-  user-select: none;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: #fefefe;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  margin: 0 10px;
-}
-
-.operate-area input {
-  all: unset;
-  flex: 1 1 auto;
-  width: 100%;
-  height: 54px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background: #fefefe;
-  padding: 0 10px;
-  font-size: 16px;
-  box-sizing: border-box;
-}
 </style>

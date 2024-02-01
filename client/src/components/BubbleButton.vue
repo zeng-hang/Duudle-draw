@@ -39,9 +39,10 @@ const handleBubbleButtonAnimate = () => {
 
 <style scoped>
 .bubbly-button {
-  --fuschia: #ff0081;
+  --fuschia: #2196F3;
   --button-bg: var(--fuschia);
-  --button-bg-dark: #e60074;
+  --button-bg-dark: #1e77d4;
+  --button-bg-light: rgba(30, 119, 212, 0.5);
   --button-text-color: #fff;
   --baby-blue: #f8faff;
 
@@ -56,7 +57,7 @@ const handleBubbleButtonAnimate = () => {
   cursor: pointer;
   position: relative;
   transition: transform ease-in 0.1s, box-shadow ease-in 0.25s;
-  box-shadow: 0 2px 25px rgba(255, 0, 130, 0.5);
+  /*box-shadow: 0 2px 25px var(--button-bg-light);*/
 }
 
 .bubbly-button:disabled,
@@ -73,7 +74,7 @@ const handleBubbleButtonAnimate = () => {
 
 .bubbly-button:active {
   background-color: var(--button-bg-dark);
-  box-shadow: 0 2px 25px rgba(255, 0, 130, 0.2);
+  box-shadow: 0 2px 25px var(--button-bg-light);
 }
 
 .bubbly-button:before,
