@@ -1,6 +1,8 @@
 import express from 'express';
-import Result from "./utils/result.js";
-import router from "./router/index.js";
+import Result from "@/utils/result.js";
+import router from "@/router/index.js";
+import createSocketIo from "@/utils/socketIo";
+
 global.Result = Result;
 
 const app = express();
@@ -8,15 +10,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/api', router, (req, res, next) => {
-  console.log('Time:', Date.now());
-});
+app.use('/api', router);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-})
-
-
-app.listen(3000, () => {
-  console.log('Example app listening on port 3000!');
+const httpServer = createSocketIo(app);
+httpServer.listen(3000, () => {
+  console.log('服务已启动：http://localhost:3000')
 });

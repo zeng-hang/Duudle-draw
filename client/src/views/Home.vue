@@ -3,14 +3,14 @@
     <head-bar title="你画我猜" :user-info="userInfo"/>
 
     <div class="join-room">
-      <bubble-button @click="gotoRoom">
+      <bubble-button @click="gotoRoom()">
         我的房间
       </bubble-button>
     </div>
 
     <div class="sundry" style="max-height: 300px; overflow:auto;">
       <h3 class="title">历史房间</h3>
-      <div class="history-room" v-for="i in 10" :key="i">
+      <div class="history-room" v-for="i in 10" :key="i" @click="gotoRoom('我是哈哈哈')">
         <user-avatar user-name="你"/>
         <div class="info">
           <div class="name">
@@ -29,14 +29,23 @@
 </template>
 
 <script setup>
-import { getUserInfo } from "@/store/localforage.js";
+import {getUserInfo} from "@/store/localforage.js";
 import UserAvatar from "@/components/UserAvatar.vue";
 import HeadBar from "@/components/HeadBar.vue";
 import BubbleButton from "@/components/BubbleButton.vue";
+import socket, {useSocketOn} from "@/utils/socketIo.js";
 
 defineOptions({
   name: 'Home',
 })
+
+useSocketOn('invite', () => {
+  console.log('invite');
+});
+
+useSocketOn('hasGame', () => {
+  console.log('hasGame');
+});
 
 const userInfo = ref({});
 getUserInfo().then((res) => {
@@ -44,8 +53,12 @@ getUserInfo().then((res) => {
 })
 
 const router = useRouter();
-const gotoRoom = () => {
-  router.push('/room');
+const gotoRoom = (roomId) => {
+  if (!roomId) {
+    roomId = userInfo.value.userName;
+  }
+
+  router.push('/room/' + roomId);
 }
 </script>
 

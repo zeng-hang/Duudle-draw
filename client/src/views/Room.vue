@@ -1,8 +1,8 @@
 <template>
   <div class="flex-container">
     <head-bar
-      title="xxx的房间"
-      description="10人在线"
+      :title="`${route.params.roomId}的房间`"
+      :description="`${contestant.length}人在线`"
       :user-info="userInfo"
     />
 
@@ -110,28 +110,44 @@ import { getUserInfo } from "@/store/localforage.js";
 import HeadBar from "@/components/HeadBar.vue";
 import UserAvatar from "@/components/UserAvatar.vue";
 import BubbleButton from "@/components/BubbleButton.vue";
+import socket, {useSocketOn, emitSocket} from "@/utils/socketIo.js";
 
 defineOptions({
   name: 'Room',
 })
 
-const userInfo = ref({});
+useSocketOn('joinRoom', (userInfo) => {
+  contestant.value.push(userInfo);
+});
 
-const route = useRoute();
-if (!route.query.userName) {
-  getUserInfo().then((res) => {
-    userInfo.value = res;
-    contestant.value.unshift(res);
-  })
-} else {
-  userInfo.value = {
-    // userName: route.query.userName,
-    // avatarBgColor: route.query.avatarBgColor,
+useSocketOn('leaveRoom', (userName) => {
+  const index = contestant.value.findIndex((item) => item.userName === userName);
+  contestant.value.splice(index, 1);
+});
+
+socket.once('roomUsers', (users) => {
+  contestant.value.push(...users);
+});
+
+useSocketOn('reSeat', (userInfo) => {
+  const user = contestant.value.find((item) => item.userName === userInfo.userName);
+  user.seatIndex = userInfo.seatIndex;
+  if (userInfo.seatIndex == null) {
+    const preparativeUser = preparative.value.find(item => item.userInfo?.userName === userInfo.userName);
+    preparativeUser.userInfo = null;
+    return;
   }
-}
+  preparative.value[userInfo.seatIndex].userInfo = user;
+});
+const userInfo = ref({});
+const route = useRoute();
+
+getUserInfo().then((res) => {
+  userInfo.value = res;
+  emitSocket('joinRoom', route.params.roomId);
+})
 
 const contestant = ref([]);
-
 const preparative = ref(new Array(6).fill(0).map((item, index) => {
   return {
     seatIndex: index,
@@ -152,15 +168,23 @@ const handleJoinGame = (seatIndex) => {
   if (seatUserInfo == null) {
     userInfo.value.seatIndex = seatIndex;
     preparative.value[seatIndex].userInfo = userInfo.value;
+
+    emitSocket('reSeat', seatIndex);
     return;
   }
 
   if (seatUserInfo.userName === userInfo.value.userName) {
     handleQuitGame(prevSeatIndex);
+    emitSocket('reSeat', null);
   }
 }
 
 const handleQuitGame = (seatIndex) => {
+  quitGame(seatIndex);
+  emitSocket('reSeat', null);
+}
+
+const quitGame = (seatIndex) => {
   const seatUserInfo = preparative.value[seatIndex].userInfo;
   if (seatUserInfo == null) {
     return;

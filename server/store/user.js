@@ -2,13 +2,26 @@ import db from './index.js'
 
 const users = db.data.users
 
+const genUser = (user) => {
+  if (!user.userName) {
+    throw new Error('用户名不能为空')
+  }
+
+  return {
+    userName: user.userName,
+    avatarBgColor: user.avatarBgColor || '#000',
+    historyRooms: [],
+    hasGame: false,
+    room: null
+  }
+}
+
 export const addUser = async (user) => {
   if (users[user.userName]) {
     return users[user.userName];
   }
 
-  user.historyRooms = [];
-  users[user.userName] = user;
+  users[user.userName] = genUser(user);
   await db.write();
 
   return users[user.userName];

@@ -104,6 +104,21 @@ class Result {
     return new Result(ERROR, message, data);
   }
 
+  /**
+   * 静态函数，执行一个函数，如果成功则返回成功结果，否则返回失败结果
+   * @param fn   要执行的函数
+   * @param res  express的res对象
+   * @returns {Promise<void>}
+   */
+  static async execAndSend(fn, res) {
+    try {
+      const result = await fn();
+      Result.success(result).send(res);
+    } catch (err) {
+      Result.fail(err.message).send(res);
+    }
+  }
+
   send(res) {
     res.send(this);
   }
