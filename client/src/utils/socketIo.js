@@ -1,6 +1,7 @@
 import {io} from 'socket.io-client';
 import {onUnmounted} from "vue";
-import {getUserInfo} from "@/store/localforage.js";
+import {getUserInfo, setHistoryRooms} from "@/store/localforage.js";
+import {showToast} from "@/components/zToast/index.js";
 
 const socket = io({
   path: '/buudle/connect'
@@ -24,6 +25,12 @@ socket.on('disconnect', () => {
   console.log('socket disconnected');
   hasConnected = false;
 });
+
+socket.on('error', (message) => {
+  showToast(message);
+});
+
+socket.once('historyRooms', setHistoryRooms);
 
 export const useSocketOn = (eventName, callback) => {
   socket.on(eventName, callback);

@@ -10,14 +10,24 @@
 
     <div class="sundry" style="max-height: 300px; overflow:auto;">
       <h3 class="title">历史房间</h3>
-      <div class="history-room" v-for="i in 10" :key="i" @click="gotoRoom('我是哈哈哈')">
-        <user-avatar user-name="你"/>
+      <div
+        v-for="item in historyRooms"
+        :class="{
+          'history-room': true,
+          'online': item.status === 'online',
+        }"
+        @click="gotoRoom(item.userName)"
+      >
+        <user-avatar
+          :user-name="item.userName"
+          :bg-color="item.avatarBgColor"
+        />
         <div class="info">
           <div class="name">
-            <span class="text-overflow">我是哈哈哈我是哈哈哈</span>
+            <span class="text-overflow">{{ item.userName }}</span>
             <span style="flex: 0 0 max-content;">的房间</span>
           </div>
-          <div class="time">2021-08-01 12:00</div>
+          <div class="time">{{ new Date(item.time).toLocaleString()}}</div>
         </div>
       </div>
     </div>
@@ -29,7 +39,7 @@
 </template>
 
 <script setup>
-import {getUserInfo} from "@/store/localforage.js";
+import {getUserInfo, getHistoryRooms} from "@/store/localforage.js";
 import UserAvatar from "@/components/UserAvatar.vue";
 import HeadBar from "@/components/HeadBar.vue";
 import BubbleButton from "@/components/BubbleButton.vue";
@@ -38,6 +48,16 @@ import socket, {useSocketOn} from "@/utils/socketIo.js";
 defineOptions({
   name: 'Home',
 })
+
+useSocketOn('roomStatus', ({room, status}) => {
+  for (const item of historyRooms.value) {
+    if (item.userName === room) {
+      item.status = status;
+      break;
+    }
+  }
+});
+
 
 useSocketOn('invite', () => {
   console.log('invite');
@@ -51,6 +71,8 @@ const userInfo = ref({});
 getUserInfo().then((res) => {
   userInfo.value = res;
 })
+
+const historyRooms = getHistoryRooms();
 
 const router = useRouter();
 const gotoRoom = (roomId) => {
@@ -103,6 +125,7 @@ const gotoRoom = (roomId) => {
 }
 
 .history-room {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -113,6 +136,19 @@ const gotoRoom = (roomId) => {
   width: clamp(200px, 100%, 300px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   background: #FAFAFA;
+  box-sizing: border-box;
+}
+
+.history-room.online::before {
+  content: '在线';
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #fff;
+  background: #00C853;
+  border-radius: 0 0 0 16px;
   box-sizing: border-box;
 }
 

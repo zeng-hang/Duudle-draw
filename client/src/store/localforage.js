@@ -13,3 +13,12 @@ export const getUserInfo = () => {
 export const setUserInfo = (userInfo) => {
   return localforage.setItem(USER_INFO, userInfo);
 }
+
+const historyRooms = ref([]);
+export const setHistoryRooms = (data) => {
+  historyRooms.value = data;
+}
+
+export const getHistoryRooms = () => {
+  return historyRooms;
+}

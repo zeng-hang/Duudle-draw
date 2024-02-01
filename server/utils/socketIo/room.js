@@ -1,28 +1,25 @@
+import {updateHistoryRooms, getUser} from "@/store/user";
+
 export default function ({socket, user, rooms, io}) {
-  io.of('/').adapter.on('create-room', (room) => {
-    console.log(`room ${room} was created`);
-  });
-
-  io.of('/').adapter.on('join-room', (room, id) => {
-    console.log(`socket ${id} has joined room ${room}`);
-  });
-
-  io.of('/').adapter.on('leave-room', (room, id) => {
-    console.log(`socket ${id} has leave room ${room}`);
-    if (!rooms[room]) return;
-    if (!rooms[room].users[id]) return;
-
-    const leaveUser = rooms[room].users[id];
-    delete rooms[room].users[id];
-
-    io.to(room).emit('leaveRoom', leaveUser.userName);
-  });
-
-  io.of('/').adapter.on('delete-room', (room) => {
-    console.log(`room ${room} was deleted`);
-  });
+  // io.of('/').adapter.on('create-room', (room) => {
+  //   console.log(`room ${room} was created`);
+  // });
+  //
+  // io.of('/').adapter.on('join-room', (room, id) => {
+  //   console.log(`socket ${id} has joined room ${room}`);
+  // });
+  //
+  // io.of('/').adapter.on('delete-room', (room) => {
+  //   console.log(`room ${room} was deleted`);
+  // });
 
   socket.on('joinRoom', (room) => {
+    const owner = getUser(room);
+    if (!owner) {
+      socket.emit('error', '房间不存在');
+      return;
+    }
+
     user.room = room;
     user.hasGame = false;
     socket.join(room)
@@ -35,7 +32,7 @@ export default function ({socket, user, rooms, io}) {
 
     if (!rooms[room]) {
       rooms[room] = {
-        owner: user.userName,
+        owner: room,
         users: {}
       }
     }
@@ -43,6 +40,8 @@ export default function ({socket, user, rooms, io}) {
     socket.emit('roomUsers', Object.values(rooms[room].users));
     rooms[room].users[socket.id] = userInfo;
     io.to(room).emit('joinRoom', userInfo);
+
+    updateHistoryRooms(user.userName, room);
   });
 
   socket.on('reSeat', (seatIndex) => {

@@ -38,6 +38,8 @@ export const updateHistoryRooms = async (userName, roomName) => {
   }
 
   const historyRooms = user.historyRooms;
+  if (userName === roomName) return historyRooms;
+
   const index = historyRooms.findIndex(item => item.userName === roomName);
   let room;
   if (index !== -1) {
