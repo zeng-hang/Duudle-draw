@@ -128,6 +128,12 @@ useSocketOn('reSeat', (userInfo) => {
   }
   preparative.value[userInfo.seatIndex].userInfo = user;
 });
+
+useSocketOn('startGame', () => {
+  console.log('startGame');
+  router.push('/game/' + route.params.roomId);
+});
+
 const userInfo = ref({});
 const route = useRoute();
 
@@ -191,9 +197,11 @@ const auditor = computed(() => {
 
 const router = useRouter();
 const handleStartGame = () => {
-  router.push({
-    path: '/game'
-  })
+  if (userInfo.value.seatIndex !== 0 || preparativeNum.value < 2) {
+    return;
+  }
+
+  emitSocket('startGame');
 }
 
 onUnmounted(() => {

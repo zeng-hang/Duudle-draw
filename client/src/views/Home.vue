@@ -49,16 +49,6 @@ defineOptions({
   name: 'Home',
 })
 
-useSocketOn('roomStatus', ({room, status}) => {
-  for (const item of historyRooms.value) {
-    if (item.userName === room) {
-      item.status = status;
-      break;
-    }
-  }
-});
-
-
 useSocketOn('invite', () => {
   console.log('invite');
 });

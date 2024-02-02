@@ -22,7 +22,7 @@ const routes = [
     component: () => import('../views/Room/index.vue')
   },
   {
-    path: '/game',
+    path: '/game/:roomId',
     name: 'Game',
     component: () => import('../views/Game.vue')
   }

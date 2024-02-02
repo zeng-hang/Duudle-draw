@@ -3,6 +3,7 @@ import {Server} from "socket.io";
 import db from "@/store";
 import {getUser} from "@/store/user.js";
 import roomHandler from "@/utils/socketIo/room";
+import gameHandler from "@/utils/socketIo/game";
 
 let io;
 const rooms = {};
@@ -32,6 +33,7 @@ const connectHandler = (socket) => {
     socket.emit('historyRooms', historyRooms);
 
     roomHandler({socket, user, rooms, io});
+    gameHandler({socket, user, rooms, io});
   });
 
   socket.on('disconnect', () => {
