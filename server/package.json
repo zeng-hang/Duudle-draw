@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "dev:build": "cross-env NODE_ENV=development webpack --mode development --watch",
-    "dev:start": "nodemon --inspect ./dist/app.js --watch ./dist/app.js",
+    "dev:start": "cross-env NODE_OPTIONS=--enable-source-maps nodemon --inspect ./dist/app.js --watch ./dist/app.js",
     "dev": "npm run dev:build | npm run dev:start",
     "build": "cross-env NODE_ENV=production webpack --mode production"
   },

@@ -129,8 +129,9 @@ useSocketOn('reSeat', (userInfo) => {
   preparative.value[userInfo.seatIndex].userInfo = user;
 });
 
+let startGame = false;
 useSocketOn('startGame', () => {
-  console.log('startGame');
+  startGame = true;
   router.push('/game/' + route.params.roomId);
 });
 
@@ -205,8 +206,16 @@ const handleStartGame = () => {
 }
 
 onUnmounted(() => {
+  if (startGame) {
+    return;
+  }
+
   emitSocket('leaveRoom');
 })
+
+window.onbeforeunload = () => {
+  emitSocket('leaveRoom');
+}
 </script>
 
 <style scoped>

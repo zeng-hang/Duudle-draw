@@ -75,7 +75,6 @@ const router = useRouter();
 const handleBack = () => {
   router.back();
 }
-
 </script>
 
 <style scoped>

@@ -1,65 +1,6 @@
-import {updateHistoryRooms, getUser} from "@/store/user";
+import {getUser} from "@/store/user";
+import Room from './RoomEntity';
 
-class Room {
-  constructor(owner, io) {
-    this.io = io;
-    this.owner = owner;
-    this.users = {};
-    this.status = 'ready'
-  }
-
-  addUser(id, user) {
-    this.users[id] = user;
-    this.io.to(this.owner).emit('joinRoom', user);
-    updateHistoryRooms(user.userName, this.owner);
-  }
-
-  removeUser(userName) {
-    delete this.users[userName];
-  }
-
-  getUsers() {
-    return Object.values(this.users);
-  }
-
-  getUser(id) {
-    return this.users[id];
-  }
-
-  reSeat(seatIndex, socket) {
-    const seatIndexArr = this.getUsers().map(user => user.seatIndex);
-    if (seatIndex != null && seatIndexArr.includes(seatIndex)) {
-      socket.emit('error', '此座位已被占用');
-      return;
-    }
-
-    const userInfo = this.getUser(socket.id);
-    userInfo.seatIndex = seatIndex;
-    this.io.to(this.owner).emit('reSeat', userInfo);
-  }
-
-  sendMessages(message, user) {
-    this.io.to(this.owner).emit('message', {
-      userName: user.userName,
-      avatarBgColor: user.avatarBgColor,
-      content: message
-    });
-  }
-
-  startGame(socket) {
-    const user = this.getUser(socket.id);
-    if (!user || user.seatIndex !== 0) {
-      socket.emit('error', '你不是房主');
-      return;
-    }
-    this.status = 'gaming';
-    this.io.to(this.owner).emit('startGame');
-  }
-
-  getPreparative() {
-    return this.getUsers().filter(user => user.seatIndex != null).sort((a, b) => a.seatIndex - b.seatIndex);
-  }
-}
 
 export default function ({socket, user, rooms, io}) {
   // io.of('/').adapter.on('create-room', (room) => {
@@ -87,8 +28,7 @@ export default function ({socket, user, rooms, io}) {
 
     const userInfo = {
       userName: user.userName,
-      avatarBgColor: user.avatarBgColor,
-      seatIndex: null
+      avatarBgColor: user.avatarBgColor
     }
 
     let room = rooms[roomName];

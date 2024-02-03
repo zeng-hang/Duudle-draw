@@ -57,3 +57,15 @@ export const updateHistoryRooms = async (userName, roomName) => {
   await db.write();
   return historyRooms;
 }
+
+export const updateUserGameStatus = async (userName, room, status) => {
+  const user = getUser(userName);
+  if (!user) {
+    throw new Error('用户不存在');
+  }
+
+  user.hasGame = status;
+  user.room = room;
+  await db.write();
+  return user;
+}

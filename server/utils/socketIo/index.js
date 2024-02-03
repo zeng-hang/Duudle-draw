@@ -36,6 +36,7 @@ const connectHandler = (socket) => {
     gameHandler({socket, user, rooms, io});
   });
 
+
   socket.on('disconnect', () => {
     console.log('socket disconnected');
     db.write();

@@ -25,7 +25,7 @@ export const useToast = () => {
           toast.value = createToast();
         },
       },
-      toastQueue.value[0]
+      () => toastQueue.value[0]
     );
 
     document.body.appendChild(container);
