@@ -5,6 +5,7 @@
       <span v-if="props.description" class="description">{{ props.description }}</span>
     </div>
     <user-avatar
+      @click="() => $router.push('/profile')"
       style="margin-left: auto; margin-right: 20px;"
       :bg-color="props.userInfo.avatarBgColor"
       :user-name="props.userInfo.userName"

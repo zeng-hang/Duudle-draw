@@ -22,3 +22,16 @@ export const setHistoryRooms = (data) => {
 export const getHistoryRooms = () => {
   return historyRooms;
 }
+
+const QUESTIONS = 'questions';
+export const getQuestions = async () => {
+  const questions = await localforage.getItem(QUESTIONS);
+  if (!questions) {
+    return [];
+  }
+  return JSON.parse(questions);
+}
+
+export const setQuestions = (questions) => {
+  return localforage.setItem(QUESTIONS, JSON.stringify(questions));
+}
